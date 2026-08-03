@@ -1,5 +1,6 @@
-require("dotenv").config();
 
+require("dotenv").config();
+const authRoutes = require("./routes/authRoutes");
 const express = require("express");
 const connectDB = require("./config/db");
 
@@ -14,6 +15,8 @@ connectDB();
 app.get("/", (req, res) => {
   res.send("🚀 Nexora Dev Backend Running...");
 });
+
+app.use("/api/auth", authRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
