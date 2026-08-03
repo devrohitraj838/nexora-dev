@@ -1,39 +1,20 @@
-import "./App.css";
+import { Routes, Route, Navigate } from "react-router-dom";
+
+import Register from "./pages/Register";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
 
 function App() {
   return (
-    <div className="app">
-      <h1> Nexora Dev</h1>
+    <Routes>
+      <Route path="/" element={<Navigate to="/register" />} />
 
-      <h2>AI Developer Companion</h2>
+      <Route path="/register" element={<Register />} />
 
-      <p>
-        Build. Track. Grow.
-      </p>
+      <Route path="/login" element={<Login />} />
 
-      <br />
-
-      <p>🚧 Currently under development...</p>
-
-      <br />
-
-      <h3>Current Progress</h3>
-
-      <ul>
-        <li>✅ Project Planning</li>
-        <li>✅ UI Concept Completed</li>
-        <li>✅ Development Environment Ready</li>
-        <li>🔄 React Frontend Setup</li>
-        <li>⏳ GitHub Integration</li>
-        <li>⏳ AI Features</li>
-      </ul>
-
-      <br />
-
-      <p>
-        Next Milestone: Build the Dashboard UI
-      </p>
-    </div>
+      <Route path="/dashboard" element={<Dashboard />} />
+    </Routes>
   );
 }
 
