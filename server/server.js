@@ -7,6 +7,7 @@ const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const projectRoutes = require("./routes/projectRoutes");
 const dsaRoutes = require("./routes/dsaRoutes"); // Your new route!
+const aiRoutes = require("./routes/aiRoutes");
 
 // Initialize the app FIRST
 const app = express();
@@ -28,6 +29,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/dsa", dsaRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Start the server
 app.listen(PORT, () => {

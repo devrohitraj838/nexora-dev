@@ -6,18 +6,67 @@ import StatCard from "../components/StatCard";
 import InsightCard from "../components/InsightCard";
 import { getProjects } from "../services/projectService";
 import { getTotalCommits, getRecentRepos } from "../services/githubService";
-import { getDsaProblems, logDsaProblem } from "../services/dsaService"; // Import the new POST function
+import { getDsaProblems, logDsaProblem } from "../services/dsaService";
+import { fetchAiInsight } from "../services/aiService";
 
 import "../styles/dashboard.css";
 
+// --- STREAK CALCULATOR LOGIC ---
+const calculateStreak = (projects, dsaProblems) => {
+  const allDates = [
+    ...projects.map(p => new Date(p.createdAt).toDateString()),
+    ...dsaProblems.map(d => new Date(d.createdAt).toDateString())
+  ];
+
+  const uniqueDates = [...new Set(allDates)]
+    .map(dateStr => new Date(dateStr))
+    .sort((a, b) => b - a);
+
+  if (uniqueDates.length === 0) return 0;
+
+  let streak = 0;
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const lastActivity = new Date(uniqueDates[0]);
+  lastActivity.setHours(0, 0, 0, 0);
+
+  const diffTime = Math.abs(today - lastActivity);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+  
+  if (diffDays > 1) return 0;
+
+  let checkDate = new Date(lastActivity);
+  for (let i = 0; i < uniqueDates.length; i++) {
+    const loopDate = new Date(uniqueDates[i]);
+    loopDate.setHours(0, 0, 0, 0);
+
+    if (checkDate.getTime() === loopDate.getTime()) {
+      streak++;
+      checkDate.setDate(checkDate.getDate() - 1);
+    } else {
+      break; 
+    }
+  }
+
+  return streak;
+};
+
+// --- MAIN DASHBOARD COMPONENT ---
 function Dashboard() {
   const navigate = useNavigate();
   
   const [userName, setUserName] = useState("Developer");
   const [projectCount, setProjectCount] = useState(0);
   const [commitCount, setCommitCount] = useState(0);
+  
   const [dsaCount, setDsaCount] = useState(0);
+  const [dsaList, setDsaList] = useState([]); 
+  
   const [recentRepos, setRecentRepos] = useState([]);
+  const [aiInsight, setAiInsight] = useState("Analyzing your developer metrics...");
+  const [streakCount, setStreakCount] = useState(0);
   
   // Modal State
   const [isDsaModalOpen, setIsDsaModalOpen] = useState(false);
@@ -34,25 +83,52 @@ function Dashboard() {
       return;
     }
 
+    // Inside Dashboard.jsx inside the useEffect
     const userString = localStorage.getItem("user");
+    let githubUsernameToFetch = "devrohitraj838"; // Fallback just in case
+
     if (userString) {
       const user = JSON.parse(userString);
       setUserName(user.name || "Developer");
+      // Grab their specific username if they logged in via GitHub
+      if (user.githubUsername) {
+         githubUsernameToFetch = user.githubUsername;
+      }
     }
 
     const fetchDashboardData = async () => {
       try {
+        // Pass the dynamic username to your GitHub fetching functions!
         const [projects, commits, repos, dsaProblems] = await Promise.all([
           getProjects(),
-          getTotalCommits(),
-          getRecentRepos(4),
+          getTotalCommits(githubUsernameToFetch), 
+          getRecentRepos(githubUsernameToFetch, 4), 
           getDsaProblems()
         ]);
+        // ... rest of the state setting
         
         setProjectCount(projects.length);
         setCommitCount(commits);
         setRecentRepos(repos);
+        
         setDsaCount(dsaProblems.length);
+        setDsaList(dsaProblems);
+
+        const currentStreak = calculateStreak(projects, dsaProblems);
+        setStreakCount(currentStreak);
+
+        // Fetch dynamic AI insight based on rich context
+const insight = await fetchAiInsight({
+  userName: userName,
+  commitsCount: commits,
+  projectsCount: projects.length,
+  dsaCount: dsaProblems.length,
+  latestProject: projects.length > 0 ? projects[0].title : "None yet",
+  latestDsa: dsaProblems.length > 0 ? `${dsaProblems[0].title} (${dsaProblems[0].difficulty})` : "None yet",
+  latestRepo: repos.length > 0 ? repos[0].name : "None yet"
+});
+        
+        setAiInsight(insight);
       } catch (error) {
         console.error("Failed to load dashboard stats:", error);
       }
@@ -61,23 +137,26 @@ function Dashboard() {
     fetchDashboardData();
   }, [navigate]);
 
-  // Handle Form Inputs
   const handleDsaChange = (e) => {
     setDsaFormData({ ...dsaFormData, [e.target.name]: e.target.value });
   };
 
-  // Submit the new problem
   const handleDsaSubmit = async (e) => {
     e.preventDefault();
     try {
       await logDsaProblem(dsaFormData);
       
-      // Instantly tick the counter up by 1 without refreshing the page!
-      setDsaCount(prevCount => prevCount + 1); 
+      const [projects, updatedDsaProblems] = await Promise.all([
+        getProjects(),
+        getDsaProblems()
+      ]);
       
-      // Reset and close
+      setDsaList(updatedDsaProblems);
+      setDsaCount(updatedDsaProblems.length);
+      setStreakCount(calculateStreak(projects, updatedDsaProblems));
+      
       setDsaFormData({ title: "", platform: "LeetCode", difficulty: "Easy" });
-      setIsDsaModalOpen(false);
+      // We removed setIsDsaModalOpen(false) here so the user can see their added problem immediately in the list!
     } catch (error) {
       console.error("Error logging DSA problem:", error);
       alert("Failed to log problem. Check console.");
@@ -95,36 +174,32 @@ function Dashboard() {
             <h1>👋 Welcome back, {userName}</h1>
             <p>Track your coding journey and grow with AI.</p>
           </div>
-          
-          <button 
-            onClick={() => setIsDsaModalOpen(true)}
-            style={{
-              padding: "10px 20px",
-              background: "#10b981", // A nice emerald green to stand out
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            + Log DSA
-          </button>
         </div>
 
         {/* The Stats Grid */}
         <div className="stats-grid">
-          <StatCard title="Coding Streak" value="0 Days" icon="🔥" />
+          <StatCard title="Coding Streak" value={`${streakCount} Days`} icon="🔥" />
           <StatCard title="GitHub Commits" value={commitCount} icon="💻" />
           
+          {/* Projects Card - Now combines Manual + GitHub Projects! */}
           <Link to="/projects" style={{ textDecoration: "none", color: "inherit" }}>
-            <StatCard title="Projects" value={projectCount} icon="📁" />
+            <StatCard title="Projects" value={projectCount + recentRepos.length} icon="📁" />
           </Link>
           
-          <StatCard title="DSA Solved" value={dsaCount} icon="🧩" />
+          {/* Clickable DSA Card Wrapper */}
+          <div 
+            onClick={() => setIsDsaModalOpen(true)}
+            style={{ cursor: "pointer", transition: "transform 0.2s" }}
+            onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.05)"}
+            onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+            title="Click to manage DSA problems"
+          >
+            <StatCard title="DSA Solved" value={dsaCount} icon="🧩" />
+          </div>
         </div>
 
-        <InsightCard />
+        {/* AI Insight Component */}
+        <InsightCard insight={aiInsight} />
 
         {/* Live GitHub Feed Section */}
         <div style={{ marginTop: "40px" }}>
@@ -168,7 +243,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* DSA Quick-Log Modal */}
+        {/* --- REDESIGNED DSA TRACKER MODAL --- */}
         {isDsaModalOpen && (
           <div style={{
             position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
@@ -177,7 +252,8 @@ function Dashboard() {
           }}>
             <div style={{
               background: "#1e293b", padding: "30px", borderRadius: "12px",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.5)", width: "100%", maxWidth: "400px", position: "relative"
+              boxShadow: "0 10px 25px rgba(0,0,0,0.5)", width: "100%", maxWidth: "500px", 
+              maxHeight: "90vh", display: "flex", flexDirection: "column", position: "relative"
             }}>
               <button 
                 onClick={() => setIsDsaModalOpen(false)}
@@ -186,40 +262,73 @@ function Dashboard() {
                 &times;
               </button>
 
-              <h2 style={{ marginTop: 0, marginBottom: "20px", color: "white" }}>Log a Problem</h2>
+              <h2 style={{ marginTop: 0, marginBottom: "20px", color: "white" }}>DSA Tracker</h2>
 
-              <form onSubmit={handleDsaSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              {/* Form to Add New */}
+              <form onSubmit={handleDsaSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
                 <input
                   type="text" name="title" placeholder="Problem Name (e.g., Two Sum)"
                   value={dsaFormData.title} onChange={handleDsaChange} required
                   style={inputStyle}
                 />
-                
-                <select name="platform" value={dsaFormData.platform} onChange={handleDsaChange} style={inputStyle}>
-                  <option value="LeetCode">LeetCode</option>
-                  <option value="GeeksforGeeks">GeeksforGeeks</option>
-                  <option value="HackerRank">HackerRank</option>
-                  <option value="Codeforces">Codeforces</option>
-                  <option value="Other">Other</option>
-                </select>
-
-                <select name="difficulty" value={dsaFormData.difficulty} onChange={handleDsaChange} style={inputStyle}>
-                  <option value="Easy">Easy</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Hard">Hard</option>
-                </select>
-
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <select name="platform" value={dsaFormData.platform} onChange={handleDsaChange} style={{...inputStyle, flex: 1}}>
+                    <option value="LeetCode">LeetCode</option>
+                    <option value="GeeksforGeeks">GeeksforGeeks</option>
+                    <option value="HackerRank">HackerRank</option>
+                    <option value="Codeforces">Codeforces</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <select name="difficulty" value={dsaFormData.difficulty} onChange={handleDsaChange} style={{...inputStyle, flex: 1}}>
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                  </select>
+                </div>
                 <button 
                   type="submit"
                   style={{
                     padding: "12px", background: "#10b981", color: "white",
                     border: "none", borderRadius: "6px", fontWeight: "bold",
-                    fontSize: "1rem", cursor: "pointer", marginTop: "10px"
+                    fontSize: "1rem", cursor: "pointer", marginTop: "5px"
                   }}
                 >
                   Save to Tracker
                 </button>
               </form>
+
+              <div style={{ borderTop: "1px solid #334155", margin: "10px 0 20px 0" }}></div>
+
+              {/* Scrollable List of Solved Problems */}
+              <h3 style={{ color: "#f8fafc", fontSize: "1.1rem", margin: "0 0 10px 0" }}>Recently Solved</h3>
+              <div style={{ overflowY: "auto", paddingRight: "5px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                {dsaList.length === 0 ? (
+                  <p style={{ color: "#94a3b8", margin: 0 }}>No problems logged yet.</p>
+                ) : (
+                  dsaList.map((dsa, index) => (
+                    <div key={index} style={{
+                      background: "#0f172a", padding: "12px 15px", borderRadius: "8px",
+                      border: "1px solid #334155", display: "flex", justifyContent: "space-between", alignItems: "center"
+                    }}>
+                      <span style={{ color: "#10b981", fontWeight: "bold" }}>{dsa.title}</span>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        <span style={{ fontSize: "0.75rem", background: "#1e293b", padding: "4px 8px", borderRadius: "4px", color: "#cbd5e1" }}>
+                          {dsa.platform}
+                        </span>
+                        <span style={{ 
+                          fontSize: "0.75rem", 
+                          background: "#1e293b", 
+                          padding: "4px 8px", 
+                          borderRadius: "4px",
+                          color: dsa.difficulty === 'Hard' ? '#ef4444' : dsa.difficulty === 'Medium' ? '#f59e0b' : '#10b981'
+                        }}>
+                          {dsa.difficulty}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         )}
