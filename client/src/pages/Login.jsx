@@ -12,18 +12,21 @@ function Login() {
   const [password, setPassword] = useState("");
 
   useEffect(() => {
+    // 1. Scan the URL for the data Render sent us
     const queryParams = new URLSearchParams(location.search);
     const token = queryParams.get("token");
     const urlName = queryParams.get("name");
     const githubUsername = queryParams.get("githubUsername");
     const error = queryParams.get("error");
 
+    // 2. If a token exists, save it and log the user in!
     if (token) {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify({ 
         name: urlName || "Developer",
         githubUsername: githubUsername
       }));
+      
       navigate("/dashboard");
     } else if (error) {
       alert("GitHub authentication failed. Please try again.");
@@ -31,8 +34,9 @@ function Login() {
   }, [location, navigate]);
 
   const handleGithubLogin = () => {
-  window.location.href = "https://nexora-dev.onrender.com/api/auth/github"; 
-};
+    // Redirects directly to the live Render backend OAuth route
+    window.location.href = "https://nexora-dev.onrender.com/api/auth/github"; 
+  };
 
   const handleManualSubmit = async (e) => {
     e.preventDefault();
