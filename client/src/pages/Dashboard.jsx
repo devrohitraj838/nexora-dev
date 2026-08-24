@@ -83,72 +83,53 @@ function Dashboard() {
       return;
     }
 
-    // Inside Dashboard.jsx inside the useEffect
     const userString = localStorage.getItem("user");
-let githubUsernameToFetch = null; // Start with nothing
+    let githubUsernameToFetch = null; // Start with nothing
 
-if (userString) {
-  const user = JSON.parse(userString);
-  setUserName(user.name || "Developer");
-  
-  if (user.githubUsername) {
-     githubUsernameToFetch = user.githubUsername;
-  }
-}
-
-    const fetchDashboardData = async () => {
-  try {
-    
-    const projects = await getProjects();
-    const dsaProblems = await getDsaProblems();
-    
-    // 2. Fetch GitHub data ONLY if they linked a GitHub account
-    let commits = 0;
-    let repos = [];
-    
-    if (githubUsernameToFetch) {
-       commits = await getTotalCommits(githubUsernameToFetch);
-       repos = await getRecentRepos(githubUsernameToFetch, 4);
+    if (userString) {
+      const user = JSON.parse(userString);
+      setUserName(user.name || "Developer");
+      
+      if (user.githubUsername) {
+         githubUsernameToFetch = user.githubUsername;
+      }
     }
 
-    // 3. Update the state (this stays exactly the same as your code)
-    setProjectCount(projects.length);
-    setCommitCount(commits);
-    setRecentRepos(repos);
-    setDsaCount(dsaProblems.length);
-    setDsaList(dsaProblems);
+    const fetchDashboardData = async () => {
+      try {
+        const projects = await getProjects();
+        const dsaProblems = await getDsaProblems();
+        
+        // Fetch GitHub data ONLY if they linked a GitHub account
+        let commits = 0;
+        let repos = [];
+        
+        if (githubUsernameToFetch) {
+           commits = await getTotalCommits(githubUsernameToFetch);
+           repos = await getRecentRepos(githubUsernameToFetch, 4);
+        }
 
-    const currentStreak = calculateStreak(projects, dsaProblems);
-    setStreakCount(currentStreak);
+        // Update the state
+        setProjectCount(projects.length);
+        setCommitCount(commits);
+        setRecentRepos(repos);
+        setDsaCount(dsaProblems.length);
+        setDsaList(dsaProblems);
 
-    // Fetch dynamic AI insight based on rich context
-    const insight = await fetchAiInsight({
-      userName: userName,
-      commitsCount: commits,
-      projectsCount: projects.length,
-      dsaCount: dsaProblems.length,
-      latestProject: projects.length > 0 ? projects[0].title : "None yet",
-      latestDsa: dsaProblems.length > 0 ? `${dsaProblems[0].title} (${dsaProblems[0].difficulty})` : "None yet",
-      latestRepo: repos.length > 0 ? repos[0].name : "None yet"
-    });
-            
-    setAiInsight(insight);
-  } catch (error) {
-    console.error("Failed to load dashboard stats:", error);
-  }
-};
+        const currentStreak = calculateStreak(projects, dsaProblems);
+        setStreakCount(currentStreak);
 
         // Fetch dynamic AI insight based on rich context
-const insight = await fetchAiInsight({
-  userName: userName,
-  commitsCount: commits,
-  projectsCount: projects.length,
-  dsaCount: dsaProblems.length,
-  latestProject: projects.length > 0 ? projects[0].title : "None yet",
-  latestDsa: dsaProblems.length > 0 ? `${dsaProblems[0].title} (${dsaProblems[0].difficulty})` : "None yet",
-  latestRepo: repos.length > 0 ? repos[0].name : "None yet"
-});
-        
+        const insight = await fetchAiInsight({
+          userName: userName,
+          commitsCount: commits,
+          projectsCount: projects.length,
+          dsaCount: dsaProblems.length,
+          latestProject: projects.length > 0 ? projects[0].title : "None yet",
+          latestDsa: dsaProblems.length > 0 ? `${dsaProblems[0].title} (${dsaProblems[0].difficulty})` : "None yet",
+          latestRepo: repos.length > 0 ? repos[0].name : "None yet"
+        });
+                
         setAiInsight(insight);
       } catch (error) {
         console.error("Failed to load dashboard stats:", error);
@@ -156,7 +137,7 @@ const insight = await fetchAiInsight({
     };
 
     fetchDashboardData();
-  }, [navigate]);
+  }, [navigate, userName]);
 
   const handleDsaChange = (e) => {
     setDsaFormData({ ...dsaFormData, [e.target.name]: e.target.value });
@@ -177,7 +158,6 @@ const insight = await fetchAiInsight({
       setStreakCount(calculateStreak(projects, updatedDsaProblems));
       
       setDsaFormData({ title: "", platform: "LeetCode", difficulty: "Easy" });
-      // We removed setIsDsaModalOpen(false) here so the user can see their added problem immediately in the list!
     } catch (error) {
       console.error("Error logging DSA problem:", error);
       alert("Failed to log problem. Check console.");
