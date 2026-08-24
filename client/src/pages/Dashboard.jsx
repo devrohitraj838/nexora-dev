@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
-import StatCard from "../components/StatCard";
+import StatCard from "../components/Statcard";
 import InsightCard from "../components/InsightCard";
 import { getProjects } from "../services/projectService";
 import { getTotalCommits, getRecentRepos } from "../services/githubService";
