@@ -1,0 +1,113 @@
+
+
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #0f172a;
+  font-family: system-ui, -apple-system, sans-serif;
+  padding: 20px; 
+}
+
+.login-card {
+  background-color: #1e293b;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  /* The Magic Responsive Width */
+  width: 100%; 
+  max-width: 400px; 
+  text-align: center;
+  border: 1px solid #334155;
+}
+
+.login-title {
+  color: #f8fafc;
+  margin: 0 0 10px 0;
+  font-size: 2rem;
+}
+
+.login-subtitle {
+  color: #94a3b8;
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.github-btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #2ea043;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.github-btn:hover {
+  transform: translateY(-2px);
+  background-color: #2c974b;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-top: 20px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.login-input {
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #334155;
+  background-color: #0f172a;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+}
+
+.login-input:focus {
+  border-color: #3b82f6;
+}
+
+.submit-btn {
+  padding: 12px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-btn:hover {
+  background-color: #2563eb;
+}
+
+/* --- THE MOBILE BREAKPOINT --- */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 30px 20px; /* Slightly less padding on very small phones */
+  }
+  
+  .login-title {
+    font-size: 1.75rem; /* Shrink the title slightly */
+  }
+}

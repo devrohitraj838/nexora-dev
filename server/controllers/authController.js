@@ -95,7 +95,7 @@ const loginUser = async (req, res) => {
 // ================= GitHub OAuth Auth Route =================
 // Redirects the user to GitHub's secure login portal
 const githubAuth = (req, res) => {
-  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=http://localhost:5000/api/auth/github/callback&scope=read:user user:email repo`;
+  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=https://nexora-dev.onrender.com/api/auth/github/callback&scope=read:user user:email repo`;
   res.redirect(githubAuthUrl);
 };
 

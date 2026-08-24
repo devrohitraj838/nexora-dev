@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { getProjects, createProject } from "../services/projectService";
+import { getRecentRepos } from "../services/githubService";
+import "../styles/projects.css"; 
 
 function Projects() {
   const [projects, setProjects] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false); // Controls the popup
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [formData, setFormData] = useState({
     title: "",
@@ -13,16 +16,42 @@ function Projects() {
   });
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchAllProjects = async () => {
       try {
-        const data = await getProjects();
-        setProjects(data);
+        const userString = localStorage.getItem("user");
+        let githubUsername = "devrohitraj838"; 
+        
+        if (userString) {
+          const user = JSON.parse(userString);
+          if (user.githubUsername) {
+            githubUsername = user.githubUsername;
+          }
+        }
+
+        const [manualProjects, githubRepos] = await Promise.all([
+          getProjects(),
+          getRecentRepos(githubUsername, 10) 
+        ]);
+
+        const formattedGithubRepos = githubRepos.map(repo => ({
+          _id: repo.id, 
+          title: repo.name,
+          description: repo.description || "No description provided.",
+          status: "GitHub Auto-Sync",
+          techStack: repo.language ? [repo.language] : [],
+          isGithub: true, 
+          url: repo.html_url
+        }));
+
+        setProjects([...manualProjects, ...formattedGithubRepos]);
       } catch (error) {
-        console.error("Error fetching projects:", error);
+        console.error("Error fetching project data:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchProjects();
+    fetchAllProjects();
   }, []);
 
   const handleChange = (e) => {
@@ -46,9 +75,9 @@ function Projects() {
       const response = await createProject(projectPayload);
       const newlyCreatedProject = response.project ? response.project : response;
 
-      setProjects([...projects, newlyCreatedProject]);
+      // Add the new project to the top of the list
+      setProjects([newlyCreatedProject, ...projects]);
 
-      // Reset form and close modal on success
       setFormData({
         title: "",
         description: "",
@@ -64,172 +93,113 @@ function Projects() {
   };
 
   return (
-    <div style={{ padding: "40px 20px", color: "white", minHeight: "100vh" }}>
-      <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-        
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
-          <h1 style={{ fontSize: "2.5rem", margin: 0 }}>My Projects</h1>
-          <button 
-            onClick={() => setIsModalOpen(true)}
-            style={{
-              padding: "10px 20px",
-              background: "#3b82f6",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              fontWeight: "bold",
-              cursor: "pointer",
-            }}
-          >
-            + Add Project
-          </button>
-        </div>
+    <div className="projects-container">
+      
+      <div className="projects-header">
+        <h1 className="projects-title">My Projects</h1>
+        <button onClick={() => setIsModalOpen(true)} className="add-btn">
+          + Add Project
+        </button>
+      </div>
 
-        {/* Modal Overlay */}
-        {isModalOpen && (
-          <div style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0, 0, 0, 0.7)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 1000
-          }}>
-            {/* Modal Content */}
-            <div style={{
-              background: "#1e293b",
-              padding: "30px",
-              borderRadius: "12px",
-              boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
-              width: "100%",
-              maxWidth: "500px",
-              position: "relative"
-            }}>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                style={{
-                  position: "absolute",
-                  top: "15px",
-                  right: "20px",
-                  background: "transparent",
-                  color: "#94a3b8",
-                  border: "none",
-                  fontSize: "1.5rem",
-                  cursor: "pointer"
-                }}
+      {isModalOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <button onClick={() => setIsModalOpen(false)} className="close-btn">
+              &times;
+            </button>
+
+            <h2 style={{ marginTop: 0, marginBottom: "20px", color: "white" }}>New Project</h2>
+
+            <form onSubmit={handleSubmit} className="project-form">
+              <input
+                type="text"
+                name="title"
+                placeholder="Project title (e.g., Expense Tracker)"
+                value={formData.title}
+                onChange={handleChange}
+                required
+                className="form-input"
+              />
+              <textarea
+                name="description"
+                placeholder="Project description"
+                value={formData.description}
+                onChange={handleChange}
+                required
+                className="form-input"
+                style={{ minHeight: "100px", resize: "vertical" }}
+              />
+              <input
+                type="text"
+                name="techStack"
+                placeholder="Tech Stack (e.g., HTML, CSS, React)"
+                value={formData.techStack}
+                onChange={handleChange}
+                className="form-input"
+              />
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="form-input"
               >
-                &times;
+                <option value="Planned">Planned</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
+              </select>
+              
+              <button type="submit" className="submit-btn">
+                Save Project
               </button>
-
-              <h2 style={{ marginTop: 0, marginBottom: "20px" }}>New Project</h2>
-
-              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-                <input
-                  type="text"
-                  name="title"
-                  placeholder="Project title (e.g., Expense Tracker)"
-                  value={formData.title}
-                  onChange={handleChange}
-                  required
-                  style={inputStyle}
-                />
-                <textarea
-                  name="description"
-                  placeholder="Project description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  required
-                  style={{ ...inputStyle, minHeight: "100px", resize: "vertical" }}
-                />
-                <input
-                  type="text"
-                  name="techStack"
-                  placeholder="Tech Stack (e.g., HTML, CSS, JavaScript)"
-                  value={formData.techStack}
-                  onChange={handleChange}
-                  style={inputStyle}
-                />
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  style={inputStyle}
-                >
-                  <option value="Planned">Planned</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                </select>
-                <button 
-                  type="submit"
-                  style={{
-                    padding: "12px",
-                    background: "#3b82f6",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    fontWeight: "bold",
-                    fontSize: "1rem",
-                    cursor: "pointer",
-                    marginTop: "10px"
-                  }}
-                >
-                  Save Project
-                </button>
-              </form>
-            </div>
+            </form>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Projects Display Grid */}
-        <div style={{ display: "grid", gap: "20px" }}>
+      {isLoading ? (
+        <p style={{ textAlign: "center", color: "#94a3b8", marginTop: "40px" }}>Loading projects...</p>
+      ) : (
+        <div className="projects-grid">
           {projects.length === 0 ? (
-            <p style={{ textAlign: "center", color: "#94a3b8", marginTop: "40px" }}>No projects found. Click above to add one!</p>
+            <p style={{ textAlign: "center", color: "#94a3b8", marginTop: "40px", gridColumn: "1 / -1" }}>
+              No projects found. Click above to add one!
+            </p>
           ) : (
             projects.map((project) => (
-              <div 
-                key={project._id}
-                style={{
-                  background: "#1e293b",
-                  padding: "20px",
-                  borderRadius: "12px",
-                  borderLeft: "5px solid #3b82f6"
-                }}
-              >
-                <h2 style={{ margin: "0 0 10px 0", color: "#f8fafc" }}>{project.title}</h2>
-                <p style={{ color: "#cbd5e1", marginBottom: "15px" }}>{project.description}</p>
-                <div style={{ display: "flex", gap: "15px", fontSize: "0.9rem" }}>
-                  <span style={{ background: "#0f172a", padding: "5px 10px", borderRadius: "4px" }}>
+              <div key={project._id} className={`project-card ${project.isGithub ? 'github-card' : ''}`}>
+                
+                <div className="card-header">
+                  {project.isGithub ? (
+                    <a href={project.url} target="_blank" rel="noopener noreferrer" className="github-link">
+                      {project.title} ↗
+                    </a>
+                  ) : (
+                    <h2 className="card-title">{project.title}</h2>
+                  )}
+                  {project.isGithub && <span className="github-badge">GitHub</span>}
+                </div>
+
+                <p className="card-desc">{project.description}</p>
+                
+                <div className="tag-container">
+                  <span className="status-tag">
                     <strong>Status:</strong> {project.status}
                   </span>
                   {project.techStack && project.techStack.length > 0 && (
-                    <span style={{ background: "#0f172a", padding: "5px 10px", borderRadius: "4px" }}>
+                    <span className="tech-tag">
                       <strong>Tech:</strong> {project.techStack.join(", ")}
                     </span>
                   )}
                 </div>
+                
               </div>
             ))
           )}
         </div>
-
-      </div>
+      )}
     </div>
   );
 }
-
-const inputStyle = {
-  padding: "12px",
-  borderRadius: "6px",
-  border: "1px solid #334155",
-  background: "#0f172a",
-  color: "white",
-  fontSize: "1rem",
-  outline: "none"
-};
 
 export default Projects;

@@ -1,6 +1,6 @@
 // src/services/dsaService.js
 
-const API_URL = "http://localhost:5000/api/dsa";
+const API_URL = "https://nexora-dev.onrender.com/api/dsa";
 
 const getToken = () => {
   return localStorage.getItem("token");
