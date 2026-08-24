@@ -1,4 +1,4 @@
-const API_URL = "https://nexora-dev.onrender.com](https://nexora-dev.onrender.com/api/ai/insight";
+const API_URL = "https://nexora-dev.onrender.com/api/ai/insight";
 
 export const fetchAiInsight = async (stats) => {
   const token = localStorage.getItem("token");
