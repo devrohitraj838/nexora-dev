@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 
 import Navbar from "../components/Navbar";
-import StatCard from "../components/Statcard";
+import Statcard from "../components/Statcard";
 import InsightCard from "../components/InsightCard";
 import { getProjects } from "../services/projectService";
 import { getTotalCommits, getRecentRepos } from "../services/githubService";
@@ -85,37 +85,58 @@ function Dashboard() {
 
     // Inside Dashboard.jsx inside the useEffect
     const userString = localStorage.getItem("user");
-    let githubUsernameToFetch = "devrohitraj838"; // Fallback just in case
+let githubUsernameToFetch = null; // Start with nothing
 
-    if (userString) {
-      const user = JSON.parse(userString);
-      setUserName(user.name || "Developer");
-      // Grab their specific username if they logged in via GitHub
-      if (user.githubUsername) {
-         githubUsernameToFetch = user.githubUsername;
-      }
-    }
+if (userString) {
+  const user = JSON.parse(userString);
+  setUserName(user.name || "Developer");
+  
+  if (user.githubUsername) {
+     githubUsernameToFetch = user.githubUsername;
+  }
+}
 
     const fetchDashboardData = async () => {
-      try {
-        // Pass the dynamic username to your GitHub fetching functions!
-        const [projects, commits, repos, dsaProblems] = await Promise.all([
-          getProjects(),
-          getTotalCommits(githubUsernameToFetch), 
-          getRecentRepos(githubUsernameToFetch, 4), 
-          getDsaProblems()
-        ]);
-        // ... rest of the state setting
-        
-        setProjectCount(projects.length);
-        setCommitCount(commits);
-        setRecentRepos(repos);
-        
-        setDsaCount(dsaProblems.length);
-        setDsaList(dsaProblems);
+  try {
+    
+    const projects = await getProjects();
+    const dsaProblems = await getDsaProblems();
+    
+    // 2. Fetch GitHub data ONLY if they linked a GitHub account
+    let commits = 0;
+    let repos = [];
+    
+    if (githubUsernameToFetch) {
+       commits = await getTotalCommits(githubUsernameToFetch);
+       repos = await getRecentRepos(githubUsernameToFetch, 4);
+    }
 
-        const currentStreak = calculateStreak(projects, dsaProblems);
-        setStreakCount(currentStreak);
+    // 3. Update the state (this stays exactly the same as your code)
+    setProjectCount(projects.length);
+    setCommitCount(commits);
+    setRecentRepos(repos);
+    setDsaCount(dsaProblems.length);
+    setDsaList(dsaProblems);
+
+    const currentStreak = calculateStreak(projects, dsaProblems);
+    setStreakCount(currentStreak);
+
+    // Fetch dynamic AI insight based on rich context
+    const insight = await fetchAiInsight({
+      userName: userName,
+      commitsCount: commits,
+      projectsCount: projects.length,
+      dsaCount: dsaProblems.length,
+      latestProject: projects.length > 0 ? projects[0].title : "None yet",
+      latestDsa: dsaProblems.length > 0 ? `${dsaProblems[0].title} (${dsaProblems[0].difficulty})` : "None yet",
+      latestRepo: repos.length > 0 ? repos[0].name : "None yet"
+    });
+            
+    setAiInsight(insight);
+  } catch (error) {
+    console.error("Failed to load dashboard stats:", error);
+  }
+};
 
         // Fetch dynamic AI insight based on rich context
 const insight = await fetchAiInsight({
@@ -178,12 +199,12 @@ const insight = await fetchAiInsight({
 
         {/* The Stats Grid */}
         <div className="stats-grid">
-          <StatCard title="Coding Streak" value={`${streakCount} Days`} icon="🔥" />
-          <StatCard title="GitHub Commits" value={commitCount} icon="💻" />
+          <Statcard title="Coding Streak" value={`${streakCount} Days`} icon="🔥" />
+          <Statcard title="GitHub Commits" value={commitCount} icon="💻" />
           
           {/* Projects Card - Now combines Manual + GitHub Projects! */}
           <Link to="/projects" style={{ textDecoration: "none", color: "inherit" }}>
-            <StatCard title="Projects" value={projectCount + recentRepos.length} icon="📁" />
+            <Statcard title="Projects" value={projectCount + recentRepos.length} icon="📁" />
           </Link>
           
           {/* Clickable DSA Card Wrapper */}
@@ -194,7 +215,7 @@ const insight = await fetchAiInsight({
             onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
             title="Click to manage DSA problems"
           >
-            <StatCard title="DSA Solved" value={dsaCount} icon="🧩" />
+            <Statcard title="DSA Solved" value={dsaCount} icon="🧩" />
           </div>
         </div>
 
