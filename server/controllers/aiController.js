@@ -27,10 +27,10 @@ const getDailyInsight = async (req, res) => {
       Reference their specific recent activity or numbers naturally. Keep it encouraging, practical, and casual.
     `;
 
-    // Make the call to Groq using Meta's Llama 3 model
+    // Make the call to Groq using the newly supported model
     const chatCompletion = await groq.chat.completions.create({
       messages: [{ role: "user", content: prompt }],
-      model: "llama3-8b-8192", 
+      model: "openai/gpt-oss-20b", // <-- THIS IS THE ONLY CHANGE
     });
 
     // Extract the response text
