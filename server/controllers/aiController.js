@@ -1,6 +1,7 @@
-const { GoogleGenAI } = require("@google/genai");
+const Groq = require("groq-sdk");
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Initialize Groq with the new environment variable
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 const getDailyInsight = async (req, res) => {
   try {
@@ -26,14 +27,18 @@ const getDailyInsight = async (req, res) => {
       Reference their specific recent activity or numbers naturally. Keep it encouraging, practical, and casual.
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
+    // Make the call to Groq using Meta's Llama 3 model
+    const chatCompletion = await groq.chat.completions.create({
+      messages: [{ role: "user", content: prompt }],
+      model: "llama3-8b-8192", 
     });
 
-    res.status(200).json({ insight: response.text });
+    // Extract the response text
+    const aiText = chatCompletion.choices[0]?.message?.content || "Keep building!";
+
+    res.status(200).json({ insight: aiText });
   } catch (error) {
-    console.error("AI Generation Error Details:", error);
+    console.error("Groq AI Generation Error Details:", error);
     // Return a 200 with a fallback insight so the frontend UI doesn't crash
     res.status(200).json({ 
       insight: "Consistency is key. Keep building, logging your problems, and shipping code every single day!" 
