@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const axios = require("axios"); // Added for GitHub OAuth requests
+const axios = require("axios"); 
 
 // ================= Register User =================
 
@@ -157,12 +157,14 @@ const githubCallback = async (req, res) => {
       expiresIn: "7d",
     });
 
-    // 5. Send them back to the React frontend with the token in the URL
-    res.redirect(`http://localhost:5173/login?token=${token}&name=${encodeURIComponent(user.name)}&githubUsername=${user.githubUsername}`);
+    // 5. Send them back to the React frontend dynamically!
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    res.redirect(`${clientUrl}/login?token=${token}&name=${encodeURIComponent(user.name)}&githubUsername=${user.githubUsername}`);
 
   } catch (error) {
     console.error("GitHub OAuth Error:", error.message);
-    res.redirect("http://localhost:5173/login?error=oauth_failed");
+    const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
+    res.redirect(`${clientUrl}/login?error=oauth_failed`);
   }
 };
 
