@@ -1,4 +1,4 @@
-import { useState, useEffect } from "reachttps://nexora-dev.ont";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios"; 
 import "../styles/login.css"; 
@@ -31,13 +31,13 @@ function Login() {
   }, [location, navigate]);
 
   const handleGithubLogin = () => {
-    window.location.href = "https://nexora-dev.onrender.com";
-  };
+  window.location.href = "https://nexora-dev.onrender.com/api/auth/github"; 
+};
 
   const handleManualSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post("https://nexora-dev.onrender.com", { email, password });
+      const response = await axios.post("https://nexora-dev.onrender.com/api/users/login", { email, password });
       localStorage.setItem("token", response.data.token);
       localStorage.setItem("user", JSON.stringify({ name: response.data.user.name }));
       navigate("/dashboard");
