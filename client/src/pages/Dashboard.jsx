@@ -170,12 +170,13 @@ function Dashboard() {
       <div className="dashboard-content">
         
         {/* Header Section */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <div>
-            <h1>👋 Welcome back, {userName}</h1>
-            <p>Track your coding journey and grow with AI.</p>
-          </div>
-        </div>
+        {/* Header Section */}
+<div className="dashboard-header">
+  <div>
+    <h1>👋 Welcome back, {userName}</h1>
+    <p>Track your coding journey and grow with AI.</p>
+  </div>
+</div>
 
         {/* The Stats Grid */}
         <div className="stats-grid">
