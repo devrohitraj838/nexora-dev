@@ -4,6 +4,8 @@ import { useNavigate, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Statcard from "../components/Statcard";
 import InsightCard from "../components/InsightCard";
+// 1. IMPORT THE MODAL
+import OnboardingModal from "../components/OnboardingModal"; 
 import { getProjects } from "../services/projectService";
 import { getTotalCommits, getRecentRepos } from "../services/githubService";
 import { getDsaProblems, logDsaProblem } from "../services/dsaService";
@@ -68,6 +70,11 @@ function Dashboard() {
   const [aiInsight, setAiInsight] = useState("Analyzing your developer metrics...");
   const [streakCount, setStreakCount] = useState(0);
   
+  // 2. SETUP MODAL STATE (Checks local storage first!)
+  const [showSetup, setShowSetup] = useState(() => {
+    return localStorage.getItem("hasOnboarded") !== "true";
+  });
+
   // Modal State
   const [isDsaModalOpen, setIsDsaModalOpen] = useState(false);
   const [dsaFormData, setDsaFormData] = useState({
@@ -75,6 +82,16 @@ function Dashboard() {
     platform: "LeetCode",
     difficulty: "Easy"
   });
+
+  // 3. HANDLE SETUP COMPLETION
+  const handleSetupComplete = async (userData) => {
+    setShowSetup(false);
+    // Save to local storage so it doesn't pop up on every page refresh
+    localStorage.setItem("hasOnboarded", "true"); 
+    
+    // Log it for now. Next, we will send this straight to your MongoDB backend!
+    console.log("Onboarding complete! Data ready for backend:", userData);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -84,7 +101,7 @@ function Dashboard() {
     }
 
     const userString = localStorage.getItem("user");
-    let githubUsernameToFetch = null; // Start with nothing
+    let githubUsernameToFetch = null; 
 
     if (userString) {
       const user = JSON.parse(userString);
@@ -100,7 +117,6 @@ function Dashboard() {
         const projects = await getProjects();
         const dsaProblems = await getDsaProblems();
         
-        // Fetch GitHub data ONLY if they linked a GitHub account
         let commits = 0;
         let repos = [];
         
@@ -109,7 +125,6 @@ function Dashboard() {
            repos = await getRecentRepos(githubUsernameToFetch, 4);
         }
 
-        // Update the state
         setProjectCount(projects.length);
         setCommitCount(commits);
         setRecentRepos(repos);
@@ -119,7 +134,6 @@ function Dashboard() {
         const currentStreak = calculateStreak(projects, dsaProblems);
         setStreakCount(currentStreak);
 
-        // Fetch dynamic AI insight based on rich context
         const insight = await fetchAiInsight({
           userName: userName,
           commitsCount: commits,
@@ -166,29 +180,27 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
+      {/* 4. RENDER THE ONBOARDING MODAL */}
+      {showSetup && <OnboardingModal onComplete={handleSetupComplete} />}
+
       <Navbar />
       <div className="dashboard-content">
         
-        {/* Header Section */}
-        {/* Header Section */}
-<div className="dashboard-header">
-  <div>
-    <h1>👋 Welcome back, {userName}</h1>
-    <p>Track your coding journey and grow with AI.</p>
-  </div>
-</div>
+        <div className="dashboard-header">
+          <div>
+            <h1>👋 Welcome back, {userName}</h1>
+            <p>Track your coding journey and grow with AI.</p>
+          </div>
+        </div>
 
-        {/* The Stats Grid */}
         <div className="stats-grid">
           <Statcard title="Coding Streak" value={`${streakCount} Days`} icon="🔥" />
           <Statcard title="GitHub Commits" value={commitCount} icon="💻" />
           
-          {/* Projects Card - Now combines Manual + GitHub Projects! */}
           <Link to="/projects" style={{ textDecoration: "none", color: "inherit" }}>
             <Statcard title="Projects" value={projectCount + recentRepos.length} icon="📁" />
           </Link>
           
-          {/* Clickable DSA Card Wrapper */}
           <div 
             onClick={() => setIsDsaModalOpen(true)}
             style={{ cursor: "pointer", transition: "transform 0.2s" }}
@@ -200,10 +212,8 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* AI Insight Component */}
         <InsightCard insight={aiInsight} />
 
-        {/* Live GitHub Feed Section */}
         <div style={{ marginTop: "40px" }}>
           <h2 style={{ fontSize: "1.5rem", marginBottom: "20px", color: "#f8fafc" }}>
             Live GitHub Feed
@@ -245,7 +255,6 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* --- REDESIGNED DSA TRACKER MODAL --- */}
         {isDsaModalOpen && (
           <div style={{
             position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh",
@@ -266,7 +275,6 @@ function Dashboard() {
 
               <h2 style={{ marginTop: 0, marginBottom: "20px", color: "white" }}>DSA Tracker</h2>
 
-              {/* Form to Add New */}
               <form onSubmit={handleDsaSubmit} style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "20px" }}>
                 <input
                   type="text" name="title" placeholder="Problem Name (e.g., Two Sum)"
@@ -301,7 +309,6 @@ function Dashboard() {
 
               <div style={{ borderTop: "1px solid #334155", margin: "10px 0 20px 0" }}></div>
 
-              {/* Scrollable List of Solved Problems */}
               <h3 style={{ color: "#f8fafc", fontSize: "1.1rem", margin: "0 0 10px 0" }}>Recently Solved</h3>
               <div style={{ overflowY: "auto", paddingRight: "5px", display: "flex", flexDirection: "column", gap: "10px" }}>
                 {dsaList.length === 0 ? (
@@ -340,7 +347,6 @@ function Dashboard() {
   );
 }
 
-// Reusable styling for form inputs
 const inputStyle = {
   padding: "12px", borderRadius: "6px", border: "1px solid #334155",
   background: "#0f172a", color: "white", fontSize: "1rem", outline: "none"
