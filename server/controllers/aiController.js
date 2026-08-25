@@ -37,6 +37,12 @@ const getDailyInsight = async (req, res) => {
       }
     `;
 
+    // --- ADDED THIS CALL ---
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+
     let rawText = response.text.trim();
     if (rawText.startsWith("```json")) {
       rawText = rawText.replace(/^```json\n/, "").replace(/\n```$/, "");

@@ -135,13 +135,13 @@ const githubCallback = async (req, res) => {
       }
 
       if (user) {
-        // They exist! Let's link their new GitHub data to this existing account
+
         user.githubId = githubData.id;
         user.githubUsername = githubData.login;
         user.avatar = githubData.avatar_url;
         await user.save();
       } else {
-        // They are completely new. Create a brand new document.
+     
         user = await User.create({
           name: githubData.name || githubData.login,
           email: githubData.email, 
@@ -152,12 +152,12 @@ const githubCallback = async (req, res) => {
       }
     }
 
-    // 4. Generate your standard JWT for Nexora Dev
+   
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "7d",
     });
 
-    // 5. Send them back to the React frontend dynamically!
+ 
     const clientUrl = process.env.CLIENT_URL || "http://localhost:5173";
     res.redirect(`${clientUrl}/login?token=${token}&name=${encodeURIComponent(user.name)}&githubUsername=${user.githubUsername}`);
 
@@ -174,7 +174,7 @@ const onboardUser = async (req, res) => {
   try {
     const { role, year, goal } = req.body;
     
-    // Find the user by the ID provided by your authMiddleware
+  
     // and update their profile and onboarded status
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id, 
