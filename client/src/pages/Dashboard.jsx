@@ -92,7 +92,8 @@ function Dashboard() {
     try {
       const token = localStorage.getItem("token"); 
       
-      const response = await fetch("http://localhost:5000/api/auth/onboard", {
+      // Changed from http://localhost:5000 to your live Render URL!
+      const response = await fetch("https://nexora-dev.onrender.com/api/auth/onboard", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -102,14 +103,13 @@ function Dashboard() {
       });
 
       if (response.ok) {
-        const updatedUser = await response.json(); // <-- Extract the newly updated user
+        const updatedUser = await response.json(); 
         
         setShowSetup(false);
         localStorage.setItem("hasOnboarded", "true");
-        localStorage.setItem("user", JSON.stringify(updatedUser)); // <-- Keep browser in sync with database
+        localStorage.setItem("user", JSON.stringify(updatedUser)); 
         
         console.log("Onboarding complete and saved to database!");
-        // Force a page refresh to immediately trigger the new AI fetch with the new goals
         window.location.reload(); 
       } else {
         console.error("Failed to save onboarding data. Check server logs.");
