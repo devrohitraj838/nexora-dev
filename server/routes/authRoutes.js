@@ -1,27 +1,23 @@
 const express = require("express");
 const router = express.Router();
 
-// 1. Import your auth middleware (Ensure the variable name matches what you exported in authMiddleware.js)
-const authMiddleware = require("../middleware/authMiddleware"); 
+// 1. Destructure 'protect' with curly braces because it was exported as an object
+const { protect } = require("../middleware/authMiddleware"); 
 
 const {
   registerUser,
   loginUser,
   githubAuth,
   githubCallback,
-  onboardUser // <-- 2. Added this import
+  onboardUser
 } = require("../controllers/authController");
 
-// Standard Auth Routes
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-
-// GitHub OAuth Routes
 router.get("/github", githubAuth);
 router.get("/github/callback", githubCallback);
 
-// Profile Onboarding Route
-// 3. Added the POST route, protected by the middleware
-router.post("/onboard", authMiddleware, onboardUser); 
+// 2. Use 'protect' instead of 'authMiddleware'
+router.post("/onboard", protect, onboardUser); 
 
 module.exports = router;
