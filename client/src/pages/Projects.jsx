@@ -19,7 +19,7 @@ function Projects() {
     const fetchAllProjects = async () => {
       try {
         const userString = localStorage.getItem("user");
-        let githubUsername = "devrohitraj838"; 
+        let githubUsername = "devrohitraj838"; // Fallback username
         
         if (userString) {
           const user = JSON.parse(userString);
@@ -75,7 +75,6 @@ function Projects() {
       const response = await createProject(projectPayload);
       const newlyCreatedProject = response.project ? response.project : response;
 
-      // Add the new project to the top of the list
       setProjects([newlyCreatedProject, ...projects]);
 
       setFormData({

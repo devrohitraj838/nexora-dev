@@ -1,11 +1,9 @@
 // src/services/githubService.js
 
-const GITHUB_USERNAME = "devrohitraj838"; 
-
-export const getTotalCommits = async () => {
+export const getTotalCommits = async (username) => {
   try {
     const response = await fetch(
-      `https://api.github.com/search/commits?q=author:${GITHUB_USERNAME}`,
+      `https://api.github.com/search/commits?q=author:${username}`,
       {
         headers: {
           "Accept": "application/vnd.github.cloak-preview" 
@@ -25,12 +23,10 @@ export const getTotalCommits = async () => {
   }
 };
 
-// ADD THIS NEW FUNCTION BELOW
-export const getRecentRepos = async (limit = 4) => {
+export const getRecentRepos = async (username, limit = 4) => {
   try {
-    // Sort by 'updated' so your most active repos stay at the top
     const response = await fetch(
-      `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated&per_page=${limit}`
+      `https://api.github.com/users/${username}/repos?sort=updated&per_page=${limit}`
     );
 
     if (!response.ok) {
@@ -40,6 +36,6 @@ export const getRecentRepos = async (limit = 4) => {
     return await response.json();
   } catch (error) {
     console.error("GitHub API Error:", error);
-    return []; // Return empty array so the UI doesn't crash
+    return []; 
   }
 };
