@@ -1,7 +1,16 @@
 import React from 'react';
 
 function InsightCard({ insight }) {
-  // Fallback just in case the API ever returns a plain string by accident
+  // 1. Safety check: Handle loading state when insight hasn't arrived yet
+  if (!insight) {
+    return (
+      <div style={cardStyle}>
+        <p style={{ color: "#cbd5e1", margin: 0 }}>🤖 AI Mentor is analyzing your progress...</p>
+      </div>
+    );
+  }
+
+  // 2. Fallback just in case the API ever returns a plain string by accident
   if (typeof insight === 'string') {
     return (
       <div style={cardStyle}>
