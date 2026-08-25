@@ -122,7 +122,7 @@ const githubCallback = async (req, res) => {
     const userResponse = await axios.get("https://api.github.com/user", {
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    
+
     const githubData = userResponse.data;
 
     // 3. Find or Create the user in your MongoDB database
@@ -168,9 +168,40 @@ const githubCallback = async (req, res) => {
   }
 };
 
+// ================= Onboard User Profile =================
+// Saves the career goals and academic year to the user document
+const onboardUser = async (req, res) => {
+  try {
+    const { role, year, goal } = req.body;
+    
+    // Find the user by the ID provided by your authMiddleware
+    // and update their profile and onboarded status
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id, 
+      {
+        $set: {
+          isOnboarded: true,
+          profile: { role, year, goal }
+        }
+      },
+      { new: true } // This tells MongoDB to return the updated document
+    ).select("-password"); // Don't send the password back to the frontend!
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Onboarding saving error:", error);
+    res.status(500).json({ message: "Server error during onboarding" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
   githubAuth,
-  githubCallback
+  githubCallback,
+  onboardUser // <-- Added here!
 };

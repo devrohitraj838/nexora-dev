@@ -4,7 +4,6 @@ import { useNavigate, Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Statcard from "../components/Statcard";
 import InsightCard from "../components/InsightCard";
-// 1. IMPORT THE MODAL
 import OnboardingModal from "../components/OnboardingModal"; 
 import { getProjects } from "../services/projectService";
 import { getTotalCommits, getRecentRepos } from "../services/githubService";
@@ -67,15 +66,20 @@ function Dashboard() {
   const [dsaList, setDsaList] = useState([]); 
   
   const [recentRepos, setRecentRepos] = useState([]);
-  const [aiInsight, setAiInsight] = useState("Analyzing your developer metrics...");
+  
+  // 1. UPDATE STATE: Expect an object for the Action Hub instead of a string
+  const [aiInsight, setAiInsight] = useState({
+    focus: "Analyzing your developer metrics...",
+    dsaAdvice: "Gathering problem patterns...",
+    projectAdvice: "Reviewing repositories..."
+  });
+  
   const [streakCount, setStreakCount] = useState(0);
   
-  // 2. SETUP MODAL STATE (Checks local storage first!)
   const [showSetup, setShowSetup] = useState(() => {
     return localStorage.getItem("hasOnboarded") !== "true";
   });
 
-  // Modal State
   const [isDsaModalOpen, setIsDsaModalOpen] = useState(false);
   const [dsaFormData, setDsaFormData] = useState({
     title: "",
@@ -83,14 +87,36 @@ function Dashboard() {
     difficulty: "Easy"
   });
 
-  // 3. HANDLE SETUP COMPLETION
+  // 2. UPDATE SETUP COMPLETE: Save the backend's response to localStorage
   const handleSetupComplete = async (userData) => {
-    setShowSetup(false);
-    // Save to local storage so it doesn't pop up on every page refresh
-    localStorage.setItem("hasOnboarded", "true"); 
-    
-    // Log it for now. Next, we will send this straight to your MongoDB backend!
-    console.log("Onboarding complete! Data ready for backend:", userData);
+    try {
+      const token = localStorage.getItem("token"); 
+      
+      const response = await fetch("http://localhost:5000/api/auth/onboard", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}` 
+        },
+        body: JSON.stringify(userData)
+      });
+
+      if (response.ok) {
+        const updatedUser = await response.json(); // <-- Extract the newly updated user
+        
+        setShowSetup(false);
+        localStorage.setItem("hasOnboarded", "true");
+        localStorage.setItem("user", JSON.stringify(updatedUser)); // <-- Keep browser in sync with database
+        
+        console.log("Onboarding complete and saved to database!");
+        // Force a page refresh to immediately trigger the new AI fetch with the new goals
+        window.location.reload(); 
+      } else {
+        console.error("Failed to save onboarding data. Check server logs.");
+      }
+    } catch (error) {
+      console.error("Network error during onboarding:", error);
+    }
   };
 
   useEffect(() => {
@@ -102,13 +128,14 @@ function Dashboard() {
 
     const userString = localStorage.getItem("user");
     let githubUsernameToFetch = null; 
+    let currentUser = {}; // Create a broader scope variable for the AI fetch
 
     if (userString) {
-      const user = JSON.parse(userString);
-      setUserName(user.name || "Developer");
+      currentUser = JSON.parse(userString);
+      setUserName(currentUser.name || "Developer");
       
-      if (user.githubUsername) {
-         githubUsernameToFetch = user.githubUsername;
+      if (currentUser.githubUsername) {
+         githubUsernameToFetch = currentUser.githubUsername;
       }
     }
 
@@ -134,8 +161,12 @@ function Dashboard() {
         const currentStreak = calculateStreak(projects, dsaProblems);
         setStreakCount(currentStreak);
 
+        // 3. UPDATE AI PAYLOAD: Send the user's specific role, year, and goal
         const insight = await fetchAiInsight({
           userName: userName,
+          role: currentUser.profile?.role || "Student",
+          year: currentUser.profile?.year || "1st Year",
+          goal: currentUser.profile?.goal || "Internship",
           commitsCount: commits,
           projectsCount: projects.length,
           dsaCount: dsaProblems.length,
@@ -180,7 +211,6 @@ function Dashboard() {
 
   return (
     <div className="dashboard">
-      {/* 4. RENDER THE ONBOARDING MODAL */}
       {showSetup && <OnboardingModal onComplete={handleSetupComplete} />}
 
       <Navbar />

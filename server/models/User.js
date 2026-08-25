@@ -7,16 +7,14 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    // Note: Some GitHub users have private emails, so keeping this optional or sparse is safe
     required: false, 
     unique: true,
     sparse: true 
   },
   password: {
     type: String,
-    required: false, // <-- THIS IS THE FIX
+    required: false, 
   },
-  // The new GitHub fields you added earlier
   githubId: { 
     type: String, 
     unique: true, 
@@ -28,6 +26,16 @@ const userSchema = new mongoose.Schema({
   avatar: { 
     type: String 
   },
+  // --- NEW ONBOARDING FIELDS ---
+  isOnboarded: {
+    type: Boolean,
+    default: false
+  },
+  profile: {
+    role: { type: String, default: "Student" },
+    year: { type: String, default: "1st Year" },
+    goal: { type: String, default: "Internship" }
+  }
 }, { timestamps: true });
 
 module.exports = mongoose.model("User", userSchema);
