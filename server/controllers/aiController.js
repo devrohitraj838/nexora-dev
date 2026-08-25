@@ -17,30 +17,25 @@ const getDailyInsight = async (req, res) => {
     } = req.body || {};
 
     const prompt = `
-      You are an elite AI career mentor. 
-      Mentee Profile: ${userName} is a ${year} ${role} whose primary goal is: ${goal}.
+      You are an elite, highly personalized AI career mentor for software developers. 
+      Mentee Profile: ${userName} is a ${year} ${role} targeting: ${goal}.
       
-      Current developer metrics:
-      - GitHub Commits: ${commitsCount} (Most recent repo: ${latestRepo})
-      - Portfolio Projects: ${projectsCount} (Most recent project: ${latestProject})
-      - DSA Problems Solved: ${dsaCount} (Most recent problem: ${latestDsa})
+      Live Developer Telemetry:
+      - GitHub Activity: ${commitsCount} commits recorded. Most recent repository actively worked on: "${latestRepo}".
+      - Portfolio Workspace: ${projectsCount} projects built. Most recent project title: "${latestProject}".
+      - Problem-Solving Log: ${dsaCount} total problems solved. Most recent problem tackled: "${latestDsa}".
 
-      Analyze their metrics and goals. Return exactly THREE highly actionable, distinct pieces of advice.
-      
-      CRITICAL: You must return ONLY a raw, valid JSON object. Do not include markdown formatting, do not include \`\`\`json, and do not include any conversational text.
+      Analyze these specific data points against their target (${goal}). Your feedback must directly name-drop their recent project ("${latestProject}") and recent repository ("${latestRepo}") to make the mentorship feel bespoke and context-aware. Avoid generic advice.
+
+      CRITICAL: You must return ONLY a raw, valid JSON object. Do not include markdown formatting like \`\`\`json, do not include code block ticks, and do not include any conversational text.
 
       Use this exact JSON schema:
       {
-        "focus": "1 short, punchy sentence on their overarching priority today to reach their specific goal.",
-        "dsaAdvice": "1 specific DSA topic or pattern they should tackle next based on their latest problem.",
-        "projectAdvice": "1 highly specific, technical step to improve their latest project or portfolio."
+        "focus": "1 short, punchy sentence addressing ${userName} directly regarding their absolute #1 execution priority today based on their ${goal}.",
+        "dsaAdvice": "1 specific DSA pattern they should master next, building directly upon their experience with ${latestDsa}.",
+        "projectAdvice": "1 highly specific, technical architectural upgrade or feature they should add immediately to their project '${latestProject}' or repo '${latestRepo}'."
       }
     `;
-
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-    });
 
     let rawText = response.text.trim();
     if (rawText.startsWith("```json")) {
