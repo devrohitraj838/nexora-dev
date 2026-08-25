@@ -1,16 +1,13 @@
 const { GoogleGenAI } = require("@google/genai");
-
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const getDailyInsight = async (req, res) => {
   try {
     const {
       userName = "Developer",
-      // --- NEW FIELDS ---
       role = "Student",
       year = "1st Year",
       goal = "Internship",
-      // ------------------
       commitsCount = 0,
       projectsCount = 0,
       dsaCount = 0,
@@ -45,7 +42,6 @@ const getDailyInsight = async (req, res) => {
       contents: prompt,
     });
 
-    // Clean the response just in case Gemini accidentally adds markdown code blocks
     let rawText = response.text.trim();
     if (rawText.startsWith("```json")) {
       rawText = rawText.replace(/^```json\n/, "").replace(/\n```$/, "");
@@ -53,15 +49,10 @@ const getDailyInsight = async (req, res) => {
       rawText = rawText.replace(/^```\n/, "").replace(/\n```$/, "");
     }
 
-    // Parse the string into an actual JSON object
     const parsedInsight = JSON.parse(rawText);
-
-    // Send the JSON object back to the frontend
     res.status(200).json(parsedInsight);
   } catch (error) {
     console.error("AI Generation Error Details:", error);
-    
-    // Fallback JSON so the frontend Action Hub doesn't crash
     res.status(200).json({
       focus: "Consistency is key. Keep logging your daily activity.",
       dsaAdvice: "Review the foundational patterns of Arrays and Strings.",

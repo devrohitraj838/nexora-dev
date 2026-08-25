@@ -1,4 +1,4 @@
-const API_URL = "https://nexora-dev.onrender.com/api/ai/insight";
+const API_URL = "https://nexora-dev.onrender.com/api/ai/insights";
 
 export const fetchAiInsight = async (stats) => {
   const token = localStorage.getItem("token");
@@ -15,5 +15,7 @@ export const fetchAiInsight = async (stats) => {
   const data = await response.json();
   if (!response.ok) throw new Error("Failed to fetch AI insight");
   
-  return data.insight;
+  // Note: Depending on whether your controller sends the object directly 
+  // or wraps it, check if you need data or data.insight!
+  return data; 
 };
