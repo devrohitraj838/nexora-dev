@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const projectSchema = new mongoose.Schema({
-  // Links this specific project to the logged-in user
+  
   user: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "User", 
@@ -16,7 +16,7 @@ const projectSchema = new mongoose.Schema({
     required: true 
   },
   techStack: [{ 
-    type: String // We save the stack as an array of strings
+    type: String 
   }],
   status: { 
     type: String, 

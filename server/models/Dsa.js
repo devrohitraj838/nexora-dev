@@ -18,7 +18,7 @@ const dsaSchema = new mongoose.Schema(
       required: true,
     },
     topic: {
-      type: String, // e.g., "Arrays", "Dynamic Programming", "Graphs"
+      type: String, 
       default: "General",
     },
     user: {
@@ -28,7 +28,7 @@ const dsaSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, // This automatically records the date you solved it!
+    timestamps: true, 
   }
 );
 

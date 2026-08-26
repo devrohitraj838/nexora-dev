@@ -1,4 +1,4 @@
-// src/services/dsaService.js
+
 
 const API_URL = "https://nexora-dev.onrender.com/api/dsa";
 
@@ -20,7 +20,7 @@ export const getDsaProblems = async () => {
   return data; 
 };
 
-// ADD THIS NEW FUNCTION TO SEND DATA TO THE BACKEND
+
 export const logDsaProblem = async (problemData) => {
   const response = await fetch(API_URL, {
     method: "POST",

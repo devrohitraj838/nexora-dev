@@ -1,9 +1,9 @@
 import axios from "axios";
 
-// Point this to your backend Express server
+
 const API_URL = "https://nexora-dev.onrender.com/api/projects"; 
 
-// Helper function to grab your JWT token for secure requests
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
   return {

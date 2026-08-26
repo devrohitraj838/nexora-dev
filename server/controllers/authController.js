@@ -168,14 +168,12 @@ const githubCallback = async (req, res) => {
   }
 };
 
-// ================= Onboard User Profile =================
-// Saves the career goals and academic year to the user document
+
 const onboardUser = async (req, res) => {
   try {
     const { role, year, goal } = req.body;
     
   
-    // and update their profile and onboarded status
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id, 
       {
@@ -184,8 +182,8 @@ const onboardUser = async (req, res) => {
           profile: { role, year, goal }
         }
       },
-      { new: true } // This tells MongoDB to return the updated document
-    ).select("-password"); // Don't send the password back to the frontend!
+      { new: true } 
+    ).select("-password"); 
 
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });

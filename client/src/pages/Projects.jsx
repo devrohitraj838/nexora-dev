@@ -30,7 +30,7 @@ function Projects() {
 
         const [manualProjects, githubRepos] = await Promise.all([
           getProjects(),
-          getRecentRepos(githubUsername, 10) 
+          getRecentRepos(githubUsername, 100) 
         ]);
 
         const formattedGithubRepos = githubRepos.map(repo => ({

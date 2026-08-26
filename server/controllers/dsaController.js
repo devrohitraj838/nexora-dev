@@ -1,6 +1,6 @@
 const Dsa = require("../models/Dsa");
 
-// Get all solved DSA problems for the logged-in user
+
 const getDsaProblems = async (req, res) => {
   try {
     const problems = await Dsa.find({ user: req.user.id }).sort({ createdAt: -1 });
@@ -10,7 +10,7 @@ const getDsaProblems = async (req, res) => {
   }
 };
 
-// Log a newly solved problem
+
 const logDsaProblem = async (req, res) => {
   try {
     const { title, platform, difficulty, topic } = req.body;
@@ -20,7 +20,7 @@ const logDsaProblem = async (req, res) => {
       platform,
       difficulty,
       topic,
-      user: req.user.id, // Attached by your auth middleware
+      user: req.user.id,
     });
 
     res.status(201).json({ message: "Problem logged successfully", problem });

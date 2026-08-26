@@ -23,7 +23,7 @@ export const getTotalCommits = async (username) => {
   }
 };
 
-export const getRecentRepos = async (username, limit = 4) => {
+export const getRecentRepos = async (username, limit = 100) => {
   try {
     const response = await fetch(
       `https://api.github.com/users/${username}/repos?sort=updated&per_page=${limit}`

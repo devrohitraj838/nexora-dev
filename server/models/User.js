@@ -26,7 +26,7 @@ const userSchema = new mongoose.Schema({
   avatar: { 
     type: String 
   },
-  // --- NEW ONBOARDING FIELDS ---
+
   isOnboarded: {
     type: Boolean,
     default: false
