@@ -15,14 +15,14 @@ Track projects, DSA progress, GitHub analytics, and receive AI-powered insights 
 ---
 
 ## 🛠 Tech Stack
-- **Frontend:** React, Vite, Tailwind CSS  
+- **Frontend:** React, Vite
 - **Backend:** Node.js, Express  
 - **Database:** MongoDB  
-- **Integrations:** GitHub API, OpenAI API  
+- **Integrations:** GitHub API, Gemini API  
 
 ---
 
 ## 📌 Status
-🚧 Currently under development. Contributions and feedback are welcome!  
+Completed. Contributions and feedback are welcome!  
 
 ---
